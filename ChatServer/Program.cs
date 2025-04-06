@@ -29,10 +29,10 @@ app.Map("/chat", async context =>
                 break;
             }
 
-            var message = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
-            Console.WriteLine($"받은 메시지: {message}");
+            var json = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
+            Console.WriteLine($"받은 메시지: {json}");
 
-            await chatService.BroadcastMessageAsync(message, client);
+            await chatService.BroadcastMessageAsync(json, client);
         }
     }
     else

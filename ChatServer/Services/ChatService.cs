@@ -1,5 +1,7 @@
-﻿using System.Net.WebSockets;
+﻿using ChatServer.Models;
+using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 
 namespace ChatServer.Services
 {
@@ -18,16 +20,29 @@ namespace ChatServer.Services
             Console.WriteLine("클라이언트 연결 해제.");
         }
 
-        public async Task BroadcastMessageAsync(string message, WebSocket sender)
+        public async Task BroadcastMessageAsync(string json, WebSocket sender)
         {
-            var buffer = Encoding.UTF8.GetBytes(message);
-
-            foreach (var otherClient in _clients)
+            try
             {
-                if (otherClient != sender && otherClient.State == WebSocketState.Open)
+                var message = JsonSerializer.Deserialize<ChatMessage>(json);
+                if (message == null || string.IsNullOrWhiteSpace(message.Text))
                 {
-                    await otherClient.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+                    return;
                 }
+
+                var buffer = Encoding.UTF8.GetBytes(json);
+
+                foreach (var otherClient in _clients)
+                {
+                    if (otherClient != sender && otherClient.State == WebSocketState.Open)
+                    {
+                        await otherClient.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
+                }
+
+            } catch (Exception exception)
+            {
+                Console.WriteLine("JSON 파싱 오류: " + exception.Message);
             }
         }
     }
