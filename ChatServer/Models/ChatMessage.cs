@@ -9,6 +9,7 @@ namespace ChatServer.Models
         [JsonPropertyName("text")]
         public string Text { get; set; } = "";
         [JsonPropertyName("type")]
-        public string Type { get; set; } = "message";
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public ChatMessageType Type { get; set; }
     }
 }
