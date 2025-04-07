@@ -14,7 +14,6 @@ app.Map("/chat", async context =>
     if (context.WebSockets.IsWebSocketRequest)
     {
         var client = await context.WebSockets.AcceptWebSocketAsync();
-        chatService.AddClient(client);
 
         var buffer = new byte[1024 * 4];
 
@@ -25,14 +24,14 @@ app.Map("/chat", async context =>
             if (receivedResult.MessageType == WebSocketMessageType.Close)
             {
                 await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "연결 해제", CancellationToken.None);
-                chatService.RemoveClient(client);
+                await chatService.RemoveClientAsync(client);
                 break;
             }
 
             var json = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
             Console.WriteLine($"받은 메시지: {json}");
 
-            await chatService.BroadcastMessageAsync(json, client);
+            await chatService.HandleMessageAsync(json, client);
         }
     }
     else
