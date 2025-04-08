@@ -5,5 +5,6 @@
         Join,
         Leave,
         Message,
+        Welcome,
     }
 }

@@ -14,6 +14,7 @@ app.Map("/chat", async context =>
     if (context.WebSockets.IsWebSocketRequest)
     {
         var client = await context.WebSockets.AcceptWebSocketAsync();
+        await chatService.AddClientAsync(client);
 
         var buffer = new byte[1024 * 4];
 
@@ -31,7 +32,7 @@ app.Map("/chat", async context =>
             var json = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
             Console.WriteLine($"받은 메시지: {json}");
 
-            await chatService.HandleMessageAsync(json, client);
+            await chatService.HandleMessageAsync(client, json);
         }
     }
     else
