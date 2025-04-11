@@ -1,6 +1,5 @@
 ﻿using ChatServer.Models;
 using ChatServer.Utils;
-using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -8,15 +7,15 @@ using System.Text.Json;
 
 namespace ChatServer.Services
 {
-    public class ChatService
+    public class ChatService(ClientRegistry registry)
     {
-        private readonly ConcurrentDictionary<WebSocket, string> _clients = new();
+        private readonly ClientRegistry _registry = registry;
 
         public async Task AddClientAsync(WebSocket client)
         {
             var nickname = NicknameGenerator.Generate();
 
-            if (_clients.TryAdd(client, nickname))
+            if (_registry.TryAdd(client, nickname))
             {
                 Console.WriteLine($"클라이언트 연결됨: {nickname}");
 
@@ -42,7 +41,7 @@ namespace ChatServer.Services
 
         public async Task RemoveClientAsync(WebSocket client)
         {
-            if (_clients.TryRemove(client, out var nickname))
+            if (_registry.TryRemove(client, out var nickname))
             {
                 Console.WriteLine($"클라이언트 연결 해제: {nickname}");
 
@@ -96,12 +95,9 @@ namespace ChatServer.Services
                 var json = JsonSerializer.Serialize(message, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
                 var buffer = Encoding.UTF8.GetBytes(json);
 
-                foreach (var otherClient in _clients)
+                foreach (var otherClient in _registry.GetOtherClients(sender))
                 {
-                    if (otherClient.Key != sender && otherClient.Key.State == WebSocketState.Open)
-                    {
-                        await otherClient.Key.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
+                    await otherClient.Key.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);                   
                 }
             } catch (Exception exception)
             {

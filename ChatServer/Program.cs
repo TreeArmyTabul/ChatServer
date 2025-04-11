@@ -5,7 +5,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-var chatService = new ChatService();
+var clientRegistry = new ClientRegistry();
+var chatService = new ChatService(clientRegistry);
 
 app.UseWebSockets();
 
