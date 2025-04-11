@@ -7,9 +7,16 @@ using System.Text.Json;
 
 namespace ChatServer.Services
 {
-    public class ChatService(ClientRegistry registry)
+    public class ChatService
     {
-        private readonly ClientRegistry _registry = registry;
+        private readonly ClientRegistry _registry;
+        private readonly CommandHandler _commandHandler;
+
+        public ChatService(ClientRegistry registry)
+        {
+            _registry = registry;
+            _commandHandler = new CommandHandler(registry, SendMessageAsync);
+        }
 
         public async Task AddClientAsync(WebSocket client)
         {
@@ -62,6 +69,10 @@ namespace ChatServer.Services
             {
                 var message = JsonSerializer.Deserialize<ChatMessage>(json);
                 if (message == null || string.IsNullOrWhiteSpace(message.Text))
+                {
+                    return;
+                }
+                if (await _commandHandler.TryHandleAsync(client, message.Text))
                 {
                     return;
                 }

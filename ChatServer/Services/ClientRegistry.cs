@@ -27,6 +27,21 @@ namespace ChatServer.Services
             return _clients.Where(kv => kv.Key != sender && kv.Key.State == WebSocketState.Open);
         }
 
+        public WebSocket? GetRandomClient(WebSocket sender)
+        {
+            var others = GetOtherClients(sender).ToList();
+   
+            if (others.Count == 0)
+            {
+                return null;
+            }
+
+            var random = new Random();
+            var selected = others[random.Next(others.Count)];
+            return selected.Key;
+        }
+
+
         public int Count => _clients.Count;
     }
 }
