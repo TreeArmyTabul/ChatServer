@@ -1,9 +1,7 @@
 ﻿using ChatServer.Commands;
 using ChatServer.Models;
-using ChatServer.Utils;
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace ChatServer.Services
@@ -111,7 +109,7 @@ namespace ChatServer.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(message, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                var json = JsonSerializer.Serialize(message);
                 var buffer = Encoding.UTF8.GetBytes(json);
 
                 await recipient.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -126,7 +124,7 @@ namespace ChatServer.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(message, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                var json = JsonSerializer.Serialize(message);
                 var buffer = Encoding.UTF8.GetBytes(json);
 
                 foreach (var recipient in recipients)
