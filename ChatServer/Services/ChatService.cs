@@ -1,4 +1,5 @@
-﻿using ChatServer.Models;
+﻿using ChatServer.Commands;
+using ChatServer.Models;
 using ChatServer.Utils;
 using System.Net.WebSockets;
 using System.Text;
@@ -10,13 +11,14 @@ namespace ChatServer.Services
     public class ChatService
     {
         private readonly CommandHandler _commandHandler;
-        private readonly InventorySevice _inventory;
         private readonly ClientRegistry _registry;
 
         public ChatService(ClientRegistry registry, InventorySevice inventory)
         {
-            _commandHandler = new CommandHandler(inventory, registry, SendMessageAsync);
-            _inventory = inventory;
+            var giftCommand = new GiftCommand(registry, inventory, SendMessageAsync);
+            var inventoryCommand = new InventoryCommand(inventory, SendMessageAsync);
+
+            _commandHandler = new CommandHandler([giftCommand, inventoryCommand]);
             _registry = registry;
         }
 
