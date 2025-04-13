@@ -9,13 +9,15 @@ namespace ChatServer.Services
 {
     public class ChatService
     {
-        private readonly ClientRegistry _registry;
         private readonly CommandHandler _commandHandler;
+        private readonly InventorySevice _inventory;
+        private readonly ClientRegistry _registry;
 
-        public ChatService(ClientRegistry registry)
+        public ChatService(ClientRegistry registry, InventorySevice inventory)
         {
+            _commandHandler = new CommandHandler(inventory, registry, SendMessageAsync);
+            _inventory = inventory;
             _registry = registry;
-            _commandHandler = new CommandHandler(registry, SendMessageAsync);
         }
 
         public async Task AddClientAsync(WebSocket client)

@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 var clientRegistry = new ClientRegistry();
-var chatService = new ChatService(clientRegistry);
+var inventoryService = new InventorySevice();
+var chatService = new ChatService(clientRegistry, inventoryService);
 
 app.UseWebSockets();
 
