@@ -22,6 +22,11 @@ namespace ChatServer.Services
             return _clients.TryRemove(client, out nickname);
         }
 
+        public IEnumerable<KeyValuePair<WebSocket, string>> GetAllClients()
+        {
+            return _clients.Where(kv => kv.Key.State == WebSocketState.Open);
+        }
+
         public IEnumerable<KeyValuePair<WebSocket, string>> GetOtherClients(WebSocket sender)
         {
             return _clients.Where(kv => kv.Key != sender && kv.Key.State == WebSocketState.Open);

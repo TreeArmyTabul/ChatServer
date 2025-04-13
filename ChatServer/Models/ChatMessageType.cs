@@ -7,6 +7,7 @@
         Leave,
         Message,
         System,
+        UserList,
         Welcome,
     }
 }

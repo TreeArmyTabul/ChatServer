@@ -22,28 +22,40 @@ namespace ChatServer.Services
         {
             var nickname = NicknameGenerator.Generate();
 
-            if (_registry.TryAdd(client, nickname))
+            if (!_registry.TryAdd(client, nickname))
             {
-                Console.WriteLine($"클라이언트 연결됨: {nickname}");
-
-                var welcomeMessage = new ChatMessage
-                {
-                    Nickname = nickname,
-                    Type = ChatMessageType.Welcome,
-                    Text = $"환영합니다, {nickname}님!"
-                };
-
-                await SendMessageAsync(client, welcomeMessage);
-
-                var joinMessage = new ChatMessage
-                {
-                    Nickname = nickname,
-                    Type = ChatMessageType.Join,
-                    Text = $"{nickname}님이 입장하셨습니다."
-                };
-
-                await BroadcastMessageAsync(client, joinMessage);
+                return;
             }
+
+            Console.WriteLine($"클라이언트 연결됨: {nickname}");
+
+            var welcomeMessage = new ChatMessage
+            {
+                Nickname = nickname,
+                Type = ChatMessageType.Welcome,
+                Text = $"환영합니다, {nickname}님!"
+            };
+
+            await SendMessageAsync(client, welcomeMessage);
+
+
+            var userListExceptClient = _registry.GetOtherClients(client);
+
+            await BroadcastMessageAsync(userListExceptClient.Select(kv => kv.Key), new ChatMessage
+            {
+                Nickname = nickname,
+                Type = ChatMessageType.Join,
+                Text = $"{nickname}님이 입장하셨습니다."
+            });
+
+            var userList = _registry.GetAllClients();
+
+            await BroadcastMessageAsync(userList.Select(kv => kv.Key), new ChatMessage
+            {
+                Nickname = "System",
+                Type = ChatMessageType.UserList,
+                Text = string.Join(", ", userList.Select(kv => kv.Value))
+            });
         }
 
         public async Task RemoveClientAsync(WebSocket client)
@@ -52,14 +64,20 @@ namespace ChatServer.Services
             {
                 Console.WriteLine($"클라이언트 연결 해제: {nickname}");
 
-                var message = new ChatMessage
+                var userListExceptClient = _registry.GetOtherClients(client);
+
+                await BroadcastMessageAsync(userListExceptClient.Select(kv => kv.Key), new ChatMessage
                 {
                     Nickname = nickname,
                     Type = ChatMessageType.Leave,
                     Text = $"{nickname}님이 나갔습니다."
-                };
-
-                await BroadcastMessageAsync(client, message);
+                });
+                await BroadcastMessageAsync(userListExceptClient.Select(kv => kv.Key), new ChatMessage
+                {
+                    Nickname = "System",
+                    Type = ChatMessageType.UserList,
+                    Text = string.Join(", ", userListExceptClient.Select(kv => kv.Value))
+                });
             }
         }
 
@@ -76,7 +94,10 @@ namespace ChatServer.Services
                 {
                     return;
                 }
-                await BroadcastMessageAsync(client, message);
+
+                var userListExceptClient = _registry.GetOtherClients(client);
+
+                await BroadcastMessageAsync(userListExceptClient.Select(kv => kv.Key), message);
             }
             catch (Exception exception)
             {
@@ -84,33 +105,34 @@ namespace ChatServer.Services
             }
         }
 
-        private async Task SendMessageAsync(WebSocket client, ChatMessage message)
+        private async Task SendMessageAsync(WebSocket recipient, ChatMessage message)
         {
             try
             {
                 var json = JsonSerializer.Serialize(message, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
                 var buffer = Encoding.UTF8.GetBytes(json);
 
-                await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+                await recipient.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch (Exception exception)
             {
                 Console.WriteLine("메시지 전송 오류: " + exception.Message);
             }
         }
-
-        private async Task BroadcastMessageAsync(WebSocket sender, ChatMessage message)
+        
+        private async Task BroadcastMessageAsync(IEnumerable<WebSocket> recipients, ChatMessage message)
         {
             try
             {
                 var json = JsonSerializer.Serialize(message, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
                 var buffer = Encoding.UTF8.GetBytes(json);
 
-                foreach (var otherClient in _registry.GetOtherClients(sender))
+                foreach (var recipient in recipients)
                 {
-                    await otherClient.Key.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);                   
+                    await recipient.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
                 }
-            } catch (Exception exception)
+            }
+            catch (Exception exception)
             {
                 Console.WriteLine("브로드캐스트 오류: " + exception.Message);
             }
