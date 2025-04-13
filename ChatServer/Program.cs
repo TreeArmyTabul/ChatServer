@@ -4,7 +4,20 @@ using System.Net.WebSockets;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 var app = builder.Build();
+
+app.UseCors();
+app.UseWebSockets();
 
 var userRepository = new UserRepository();
 
@@ -17,8 +30,6 @@ app.MapLogin(tokenService, userRepository); // "/login" 엔드포인트를 등록합니다.
 var clientRegistry = new ClientRegistry();
 var inventoryService = new InventorySevice();
 var chatService = new ChatService(clientRegistry, inventoryService);
-
-app.UseWebSockets();
 
 app.Map("/chat", async context =>
 {
