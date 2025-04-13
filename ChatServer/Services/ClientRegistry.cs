@@ -12,9 +12,9 @@ namespace ChatServer.Services
             return _clients.TryAdd(client, nickname);
         }
 
-        public string TryGetNickname(WebSocket client)
+        public bool TryGetNickname(WebSocket client, out string nickname)
         {
-            return _clients.TryGetValue(client, out var nickname) ? nickname : string.Empty;
+            return _clients.TryGetValue(client, out nickname);
         }
 
         public bool TryRemove(WebSocket client, out string nickname)

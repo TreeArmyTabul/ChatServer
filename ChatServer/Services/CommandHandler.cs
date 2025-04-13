@@ -18,10 +18,8 @@ namespace ChatServer.Services
         public async Task<bool> TryHandleAsync(WebSocket sender, string text)
         {
             if (text.Trim() == "/gift")
-            {
-                var senderNickname = _registry.TryGetNickname(sender);
-
-                if (senderNickname == string.Empty)
+            { 
+                if (!_registry.TryGetNickname(sender, out var senderNickname))
                 {
                     return true;
                 }
