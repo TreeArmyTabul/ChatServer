@@ -1,9 +1,18 @@
+using ChatServer.Http;
 using ChatServer.Services;
 using System.Net.WebSockets;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
+
+var userRepository = new UserRepository();
+
+app.MapRegister(userRepository); // "/register" 엔드포인트를 등록합니다.
+
+var tokenService = new TokenService();
+
+app.MapLogin(tokenService, userRepository); // "/login" 엔드포인트를 등록합니다.
 
 var clientRegistry = new ClientRegistry();
 var inventoryService = new InventorySevice();
@@ -15,8 +24,33 @@ app.Map("/chat", async context =>
 {
     if (context.WebSockets.IsWebSocketRequest)
     {
+        string? token = context.Request.Query["token"].FirstOrDefault();
+
+        // 1. 토큰 유효성 검사
+        if (token is null || !tokenService.Validate(token, out string? userId))
+        {
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("승인되지 않은 접근");
+            return;
+        }
+
+        // 2. 사용자 정보 조회
+        string? nickname = userRepository.GetNickname(userId!);
+
+        if (nickname is null)
+        {
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("승인되지 않은 접근");
+            return;
+        }
+
+        // 3. WeobSocket 연결
         var client = await context.WebSockets.AcceptWebSocketAsync();
-        await chatService.AddClientAsync(client);
+
+        // 4. 토큰 만료 처리
+        tokenService.Revoke(token);
+
+        await chatService.AddClientAsync(client, nickname);
 
         var buffer = new byte[1024 * 4];
 

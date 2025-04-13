@@ -22,10 +22,8 @@ namespace ChatServer.Services
             _registry = registry;
         }
 
-        public async Task AddClientAsync(WebSocket client)
+        public async Task AddClientAsync(WebSocket client, string nickname)
         {
-            var nickname = NicknameGenerator.Generate();
-
             if (!_registry.TryAdd(client, nickname))
             {
                 return;
