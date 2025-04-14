@@ -29,7 +29,7 @@ app.MapLogin(tokenService, userRepository); // "/login" 엔드포인트를 등록합니다.
 
 var clientRegistry = new ClientRegistry();
 var inventoryService = new InventorySevice();
-var chatService = new ChatService(clientRegistry, inventoryService);
+var chatService = new ChatService(clientRegistry, inventoryService, userRepository);
 
 app.Map("/chat", async context =>
 {
@@ -61,7 +61,7 @@ app.Map("/chat", async context =>
         // 4. 토큰 만료 처리
         tokenService.Revoke(token);
 
-        await chatService.AddClientAsync(client, nickname);
+        await chatService.AddClientAsync(client, userId!, nickname);
 
         var buffer = new byte[1024 * 4];
 
@@ -72,14 +72,14 @@ app.Map("/chat", async context =>
             if (receivedResult.MessageType == WebSocketMessageType.Close)
             {
                 await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "연결 해제", CancellationToken.None);
-                await chatService.RemoveClientAsync(client);
+                await chatService.RemoveClientAsync(userId!);
                 break;
             }
 
             var json = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
             Console.WriteLine($"받은 메시지: {json}");
 
-            await chatService.HandleMessageAsync(client, json);
+            await chatService.HandleMessageAsync(userId!, json);
         }
     }
     else

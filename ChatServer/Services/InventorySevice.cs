@@ -5,22 +5,22 @@ namespace ChatServer.Services
 {
     public class InventorySevice
     {
-        private readonly ConcurrentDictionary<WebSocket, List<string>> _inventory = new();
+        private readonly ConcurrentDictionary<string, List<string>> _inventory = new();
 
-        public void AddItem(WebSocket client, string item)
+        public void AddItem(string userId, string item)
         {
-            if (_inventory.TryGetValue(client, out List<string>? items))
+            if (_inventory.TryGetValue(userId, out List<string>? items))
             {
                 items.Add(item);
             } else
             {
-                _inventory[client] = [item];
+                _inventory[userId] = [item];
             }
         }
 
-        public List<string> GetItems(WebSocket client)
+        public List<string> GetItems(string userId)
         {
-            if (_inventory.TryGetValue(client, out List<string>? items))
+            if (_inventory.TryGetValue(userId, out List<string>? items))
             {
                 return items;
             }

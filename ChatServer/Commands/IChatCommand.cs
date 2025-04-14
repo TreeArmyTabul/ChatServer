@@ -5,6 +5,6 @@ namespace ChatServer.Commands
     public interface IChatCommand
     {
         string Name { get; }
-        Task ExecuteAsync(WebSocket sender);
+        Task ExecuteAsync(string userId);
     }
 }

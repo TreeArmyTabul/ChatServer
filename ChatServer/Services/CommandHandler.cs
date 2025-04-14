@@ -1,5 +1,4 @@
 ﻿using ChatServer.Commands;
-using System.Net.WebSockets;
 
 namespace ChatServer.Services
 {
@@ -12,11 +11,11 @@ namespace ChatServer.Services
             _commands = commands.ToDictionary(cmd => cmd.Name, cmd => cmd);
         }
     
-        public async Task<bool> TryHandleAsync(WebSocket sender, string text)
+        public async Task<bool> TryHandleAsync(string userId, string text)
         {
             if (_commands.TryGetValue(text, out var command))
             {
-                await command.ExecuteAsync(sender);
+                await command.ExecuteAsync(userId);
                 return true;
             }
             return false;

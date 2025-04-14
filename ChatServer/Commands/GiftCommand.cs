@@ -7,51 +7,55 @@ namespace ChatServer.Commands
 {
     public class GiftCommand : IChatCommand
     {
-        private readonly ClientRegistry _registry;
         private readonly InventorySevice _inventory;
+        private readonly ClientRegistry _registry;
         private readonly Func<WebSocket, ChatMessage, Task> _sendMessage;
+        private readonly UserRepository _userRepo;
 
         public string Name => "/gift";
 
-        public GiftCommand(ClientRegistry registry, InventorySevice inventory, Func<WebSocket, ChatMessage, Task> sendMessage)
+        public GiftCommand(InventorySevice inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage, UserRepository userRepo)
         {
-            _registry = registry;
             _inventory = inventory;
+            _registry = registry;
             _sendMessage = sendMessage;
+            _userRepo = userRepo;
         }
 
-        public async Task ExecuteAsync(WebSocket sender)
+        public async Task ExecuteAsync(string userId)
         {
-            if (!_registry.TryGetNickname(sender, out var senderNickname))
+            WebSocket? socket = _registry.GetSocketByUserId(userId);
+            string? senderNickname = _userRepo.GetNickname(userId);
+
+            if (socket == null || senderNickname == null)
             {
                 return;
             }
 
-            var recipient = _registry.GetRandomClient(sender);
+            var candidates = _registry.GetSocketsExcept(userId).ToList();
 
-            if (recipient == null)
+            if (candidates.Count > 0)
             {
-                var systemMessage = new ChatMessage
+                var random = new Random();
+                var recipient = candidates[random.Next(candidates.Count)];
+                var gift = GiftGenerator.GetRandomGift();
+
+                _inventory.AddItem(recipient.Key, gift);
+
+                await _sendMessage(recipient.Value, new ChatMessage
                 {
                     Nickname = string.Empty,
-                    Type = ChatMessageType.System,
-                    Text = "현재는 선물을 받을 수 있는 사람이 없습니다."
-                };
-
-                await _sendMessage(sender, systemMessage);
-
+                    Type = ChatMessageType.Gift,
+                    Text = $"{senderNickname}님이 {gift}을(를) 보냈습니다."
+                });
                 return;
             }
 
-            var gift = GiftGenerator.GetRandomGift();
-
-            _inventory.AddItem(recipient, gift);
-
-            await _sendMessage(recipient, new ChatMessage
+            await _sendMessage(socket, new ChatMessage
             {
                 Nickname = string.Empty,
-                Type = ChatMessageType.Gift,
-                Text = $"{senderNickname}님이 {gift}을(를) 보냈습니다."
+                Type = ChatMessageType.System,
+                Text = "현재는 선물을 받을 수 있는 사람이 없습니다."
             });
         }
     }

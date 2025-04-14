@@ -5,48 +5,37 @@ namespace ChatServer.Services
 {
     public class ClientRegistry
     {
-        private readonly ConcurrentDictionary<WebSocket, string> _clients = new();
+        private readonly ConcurrentDictionary<string, WebSocket> _sessions = new();
 
-        public bool TryAdd(WebSocket client, string nickname)
+        public async Task RegisterAsync(string userId, WebSocket socket)
         {
-            return _clients.TryAdd(client, nickname);
-        }
-
-        public bool TryGetNickname(WebSocket client, out string nickname)
-        {
-            return _clients.TryGetValue(client, out nickname);
-        }
-
-        public bool TryRemove(WebSocket client, out string nickname)
-        {
-            return _clients.TryRemove(client, out nickname);
-        }
-
-        public IEnumerable<KeyValuePair<WebSocket, string>> GetAllClients()
-        {
-            return _clients.Where(kv => kv.Key.State == WebSocketState.Open);
-        }
-
-        public IEnumerable<KeyValuePair<WebSocket, string>> GetOtherClients(WebSocket sender)
-        {
-            return _clients.Where(kv => kv.Key != sender && kv.Key.State == WebSocketState.Open);
-        }
-
-        public WebSocket? GetRandomClient(WebSocket sender)
-        {
-            var others = GetOtherClients(sender).ToList();
-   
-            if (others.Count == 0)
-            {
-                return null;
+            if (_sessions.TryGetValue(userId, out var existingSession)) {
+                if (existingSession.State == WebSocketState.Open) {
+                    await existingSession.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                        "중복 접속으로 기존 연결을 종료합니다.", CancellationToken.None);
+                }
             }
-
-            var random = new Random();
-            var selected = others[random.Next(others.Count)];
-            return selected.Key;
+            _sessions[userId] = socket;
         }
 
+        public bool TryRemove(string userId)
+        {
+            return _sessions.TryRemove(userId, out _);
+        }
 
-        public int Count => _clients.Count;
+        public IEnumerable<KeyValuePair<string, WebSocket>> GetAllSockets()
+        {
+            return _sessions.Where(kv => kv.Value.State == WebSocketState.Open);
+        }
+
+        public WebSocket? GetSocketByUserId(string userId)
+        {
+            return _sessions.TryGetValue(userId, out var socket) ? socket : null;
+        }
+
+        public IEnumerable<KeyValuePair<string, WebSocket>> GetSocketsExcept(string userId)
+        {
+            return _sessions.Where(kv => kv.Key != userId && kv.Value.State == WebSocketState.Open);
+        }
     }
 }
