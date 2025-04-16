@@ -16,8 +16,9 @@ namespace ChatServer.Services
         {
             var giftCommand = new GiftCommand(inventory, registry, SendMessageAsync, userRepository);
             var inventoryCommand = new InventoryCommand(inventory, registry, SendMessageAsync);
+            var rankCommand = new RankCommand(inventory, registry, SendMessageAsync, userRepository);
 
-            _commandHandler = new CommandHandler([giftCommand, inventoryCommand]);
+            _commandHandler = new CommandHandler([giftCommand, inventoryCommand, rankCommand]);
             _registry = registry;
             _userRepository = userRepository;
         }

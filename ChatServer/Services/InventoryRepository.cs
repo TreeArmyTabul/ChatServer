@@ -45,6 +45,14 @@ namespace ChatServer.Services
             return [];
         }
 
+        public Dictionary<string, int> GetUserValues()
+        {
+            return _store.ToDictionary(
+                kv => kv.Key,
+                kv => kv.Value.Sum(item => item.Value)
+            );
+        }
+
         private void Save()
         {
             var json = JsonSerializer.Serialize(_store);
