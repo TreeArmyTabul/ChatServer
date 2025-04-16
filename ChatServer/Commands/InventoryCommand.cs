@@ -6,13 +6,13 @@ namespace ChatServer.Commands
 {
     public class InventoryCommand : IChatCommand
     {
-        private readonly InventorySevice _inventory;
+        private readonly InventoryRepository _inventory;
         private readonly ClientRegistry _registry;
         private readonly Func<WebSocket, ChatMessage, Task> _sendMessage;
 
         public string Name => "/inventory";
 
-        public InventoryCommand(InventorySevice inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage)
+        public InventoryCommand(InventoryRepository inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage)
         {
             _inventory = inventory;
             _registry = registry;

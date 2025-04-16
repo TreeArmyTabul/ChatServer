@@ -28,7 +28,7 @@ var tokenService = new TokenService();
 app.MapLogin(tokenService, userRepository); // "/login" 엔드포인트를 등록합니다.
 
 var clientRegistry = new ClientRegistry();
-var inventoryService = new InventorySevice();
+var inventoryService = new InventoryRepository();
 var chatService = new ChatService(clientRegistry, inventoryService, userRepository);
 
 app.Map("/chat", async context =>

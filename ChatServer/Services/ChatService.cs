@@ -12,7 +12,7 @@ namespace ChatServer.Services
         private readonly ClientRegistry _registry;
         private readonly UserRepository _userRepository;
 
-        public ChatService(ClientRegistry registry, InventorySevice inventory, UserRepository userRepository)
+        public ChatService(ClientRegistry registry, InventoryRepository inventory, UserRepository userRepository)
         {
             var giftCommand = new GiftCommand(inventory, registry, SendMessageAsync, userRepository);
             var inventoryCommand = new InventoryCommand(inventory, registry, SendMessageAsync);

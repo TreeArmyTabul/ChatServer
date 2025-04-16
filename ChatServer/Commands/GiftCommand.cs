@@ -7,14 +7,14 @@ namespace ChatServer.Commands
 {
     public class GiftCommand : IChatCommand
     {
-        private readonly InventorySevice _inventory;
+        private readonly InventoryRepository _inventory;
         private readonly ClientRegistry _registry;
         private readonly Func<WebSocket, ChatMessage, Task> _sendMessage;
         private readonly UserRepository _userRepo;
 
         public string Name => "/gift";
 
-        public GiftCommand(InventorySevice inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage, UserRepository userRepo)
+        public GiftCommand(InventoryRepository inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage, UserRepository userRepo)
         {
             _inventory = inventory;
             _registry = registry;
