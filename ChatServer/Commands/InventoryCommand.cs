@@ -27,13 +27,13 @@ namespace ChatServer.Commands
                 return;
             }
 
-            List<string> items = _inventory.GetItems(userId);
+            List<Item> items = _inventory.GetItems(userId);
 
             await _sendMessage(socket, new ChatMessage
             {
                 Nickname = string.Empty,
                 Type = ChatMessageType.System,
-                Text = string.Join(", ", items)
+                Text = string.Join(", ", items.Select(item => item.Name))
             });
         }
     }

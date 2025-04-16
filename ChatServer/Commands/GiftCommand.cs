@@ -46,7 +46,7 @@ namespace ChatServer.Commands
                 {
                     Nickname = string.Empty,
                     Type = ChatMessageType.Gift,
-                    Text = $"{senderNickname}님이 {gift}을(를) 보냈습니다."
+                    Text = $"{senderNickname}님이 {gift.Name}을(를) 보냈습니다."
                 });
                 return;
             }

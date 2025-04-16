@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using ChatServer.Models;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace ChatServer.Services
@@ -6,7 +7,7 @@ namespace ChatServer.Services
     public class InventoryRepository
     {
         private readonly string _filePath = Path.Combine("Data", "inventories.json");
-        private readonly ConcurrentDictionary<string, List<string>> _store;
+        private readonly ConcurrentDictionary<string, List<Item>> _store;
 
         public InventoryRepository()
         {
@@ -15,7 +16,7 @@ namespace ChatServer.Services
             if (File.Exists(_filePath))
             {
                 var json = File.ReadAllText(_filePath);
-                _store = JsonSerializer.Deserialize<ConcurrentDictionary<string, List<string>>>(json) ?? [];
+                _store = JsonSerializer.Deserialize<ConcurrentDictionary<string, List<Item>>>(json) ?? [];
             }
             else
             {
@@ -23,9 +24,9 @@ namespace ChatServer.Services
             }
         }
 
-        public void AddItem(string userId, string item)
+        public void AddItem(string userId, Item item)
         {
-            if (_store.TryGetValue(userId, out List<string>? items))
+            if (_store.TryGetValue(userId, out List<Item>? items))
             {
                 items.Add(item);
             } else
@@ -35,9 +36,9 @@ namespace ChatServer.Services
             Save();
         }
 
-        public List<string> GetItems(string userId)
+        public List<Item> GetItems(string userId)
         {
-            if (_store.TryGetValue(userId, out List<string>? items))
+            if (_store.TryGetValue(userId, out List<Item>? items))
             {
                 return items;
             }
