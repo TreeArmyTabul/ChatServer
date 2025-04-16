@@ -103,9 +103,28 @@ namespace ChatServer.Services
                 {
                     return;
                 }
-                if (await _commandHandler.TryHandleAsync(userId, message.Text))
+                
+                try
                 {
-                    return;
+                    if (await _commandHandler.TryHandleAsync(userId, message.Text))
+                    {
+                        return;
+                    }
+                } catch (CommandNotFoundException exception)
+                {
+                    var socket = _registry.GetSocketByUserId(userId);
+
+                    if (socket == null)
+                    {
+                        return;
+                    }
+
+                    await SendMessageAsync(socket, new ChatMessage
+                    {
+                        Nickname = "System",
+                        Type = ChatMessageType.System,
+                        Text = exception.Message
+                    });
                 }
 
                 var others = _registry.GetSocketsExcept(userId);
