@@ -18,7 +18,7 @@ namespace ChatServer.Http
                     if (request is null || string.IsNullOrWhiteSpace(request.Id) || string.IsNullOrWhiteSpace(request.Password))
                     {
                         context.Response.StatusCode = 400;
-                        await context.Response.WriteAsync("잘못된 요청");
+                        await context.Response.WriteAsJsonAsync(new { success = false, message = "잘못된 요청" });
                         return;
                     }
 
@@ -27,17 +27,17 @@ namespace ChatServer.Http
                     if (!success)
                     {
                         context.Response.StatusCode = 401;
-                        await context.Response.WriteAsync("아이디 또는 비밀번호 불일치");
+                        await context.Response.WriteAsJsonAsync(new { success = false, message = "아이디 또는 비밀번호 불일치" });
                         return;
                     }
 
                     string token = tokenService.Issue(request.Id);
                     context.Response.StatusCode = 200;
-                    await context.Response.WriteAsJsonAsync(new { token });
+                    await context.Response.WriteAsJsonAsync(new { success = true, message = string.Empty, token });
                 }
                 catch (Exception ex) { 
                     context.Response.StatusCode = 500;
-                    await context.Response.WriteAsync($"서버 오류: {ex.Message}");
+                    await context.Response.WriteAsJsonAsync(new { success = false, message = $"서버 오류: {ex.Message}" }   );
                 }
             });
         }

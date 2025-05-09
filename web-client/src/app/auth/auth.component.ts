@@ -24,21 +24,19 @@ export class AuthComponent {
     if (this.isLoginMode()) {
       this.authService.login({ Id: this.authData.id, Password: this.authData.password }).subscribe({
         next: (response) => {
-          console.log("로그인 성공", response);
           this.router.navigate(['/chat'], { queryParams: { token: response.token }});
         },
-        error: (err) => {
-          console.error('로그인 실패', err);
+        error: () => {
+          this.authData = { id: '', password: '' };
         }
       });
     } else {
       this.authService.register({ Id: this.authData.id, Password: this.authData.password }).subscribe({
-        next: (response) => {
-          console.log("회원가입 성공", response);
-          this.router.navigate(['/chat']);
+        next: () => {
+          this.isLoginMode.set(true);
         },
-        error: (err) => {
-          console.error('회원가입 실패', err);
+        error: () => {
+          this.authData = { id: '', password: '' };
         }
       });
     }

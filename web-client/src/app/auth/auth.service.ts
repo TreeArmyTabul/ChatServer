@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 export interface AuthPayload {
   Id: string;
@@ -14,10 +14,32 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   register(data: AuthPayload): Observable<{ success: boolean; message: string }> {
-    return this.http.post<{ success: boolean; message: string }>(`${this.BASE_URL}/register`, data);
+    return this.http.post<{ success: boolean; message: string }>(`${this.BASE_URL}/register`, data).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.message);
+        }
+        return response;
+      }),
+      catchError((error) => {
+        console.error('회원가입 실패', error);
+        return throwError(() => new Error(error.message));
+      })
+    );
   }
 
-  login(data: AuthPayload): Observable<{ success: boolean; token?: string; message?: string }> {
-    return this.http.post<{ success: boolean; token?: string; message?: string }>(`${this.BASE_URL}/login`, data);
+  login(data: AuthPayload): Observable<{ success: boolean; message: string; token?: string; }> {
+    return this.http.post<{ success: boolean; message: string; token?: string; }>(`${this.BASE_URL}/login`, data).pipe(
+      map((response) => {
+        if (!response.success) {
+          throw new Error(response.message);
+        }
+        return response;
+      }),
+      catchError((error) => {
+        console.error('로그인 실패', error);
+        return throwError(() => new Error(error.message));
+      })
+    );
   }
 }
