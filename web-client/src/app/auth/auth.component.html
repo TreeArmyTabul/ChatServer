@@ -1,0 +1,23 @@
+<div class="auth-container">
+    <div class="auth-card">
+      <h2>{{ isLoginMode() ? '로그인' : '회원가입' }}</h2>
+  
+      <form (ngSubmit)="onSubmit()" #authForm="ngForm">
+        <div class="form-group">
+          <label for="id">아이디</label>
+          <input type="text" id="id" name="id" [(ngModel)]="authData.id" required />
+        </div>
+  
+        <div class="form-group">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" name="password" [(ngModel)]="authData.password" required />
+        </div>
+  
+        <button type="submit">{{ isLoginMode() ? '로그인' : '회원가입' }}</button>
+      </form>
+  
+      <p class="switch-mode" (click)="toggleMode()">
+        {{ isLoginMode() ? '회원이 아니신가요? 회원가입' : '이미 계정이 있으신가요? 로그인' }}
+      </p>
+    </div>
+  </div>

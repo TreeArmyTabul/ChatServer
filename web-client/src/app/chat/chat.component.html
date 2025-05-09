@@ -1,0 +1,27 @@
+<div class="chat-container">
+    @if (chatService.nickname(); as myNickname) {
+        <div>
+            <ul class="chat-messages">
+                @for (message of chatService.messages(); track $index) {
+                    <chat-message 
+                        [isSelf]="message.Nickname === myNickname" 
+                        [message]="message"
+                    ></chat-message>
+                }
+            </ul>
+    
+            <div class="chat-input">
+                <input [(ngModel)]="inputMessage" (keydown.enter)="sendMessage()" placeholder="메시지를 입력하세요" />
+                <button (click)="sendMessage()">보내기</button>
+            </div>
+        </div>
+
+        <ul class="user-list">
+            @for (nickname of chatService.userList(); track $index) {
+                <li>{{ nickname }}</li>
+            }
+        </ul>
+    } @else {
+        <p>채팅 서버에 접속 중입니다...</p>
+    }
+</div>

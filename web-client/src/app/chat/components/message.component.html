@@ -1,0 +1,27 @@
+@switch (message().Type) {
+    @case (ChatMessageType.Gift) {
+        <li class="gift-wrapper">
+            <div class="gift-message">{{ message().Text }}</div>
+        </li>
+    }
+    @case (ChatMessageType.Join) {
+        <li class="system-message">{{ message().Text }}</li>
+    }
+    @case (ChatMessageType.Leave) {
+        <li class="system-message">{{ message().Text }}</li>
+    }
+    @case (ChatMessageType.Message) {
+        <li class="message" [class.self]="isSelf()">
+            @if (!isSelf()) {
+                <div class="nickname">{{ message().Nickname }}</div>
+            }
+            <div class="bubble">{{ message().Text }}</div>
+        </li> 
+    }
+    @case (ChatMessageType.System) {
+        <li class="system-message">{{ message().Text }}</li>
+    }
+    @case (ChatMessageType.Welcome) {
+        <li class="system-message">{{ message().Text }}</li>
+    }
+}
