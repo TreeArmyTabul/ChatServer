@@ -1,6 +1,4 @@
-﻿using System.Net.WebSockets;
-
-namespace ChatServer.Commands
+﻿namespace ChatServer.Commands
 {
     public interface IChatCommand
     {

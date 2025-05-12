@@ -12,6 +12,20 @@
           <label for="password">비밀번호</label>
           <input type="password" id="password" name="password" [(ngModel)]="authData.password" required />
         </div>
+
+        <div class="form-group">
+          <label>데이터 포맷 선택</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="dataFormat" [(ngModel)]="dataFormat" value="json" checked>
+              JSON
+            </label>
+            <label>
+              <input type="radio" name="dataFormat" [(ngModel)]="dataFormat" value="protobuf">
+              Protocol Buffers
+            </label>
+          </div>
+        </div>
   
         <button type="submit">{{ isLoginMode() ? '로그인' : '회원가입' }}</button>
       </form>

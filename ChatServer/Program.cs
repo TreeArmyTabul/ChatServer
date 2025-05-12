@@ -1,7 +1,6 @@
 using ChatServer.Http;
 using ChatServer.Services;
 using System.Net.WebSockets;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
@@ -21,11 +20,11 @@ app.UseWebSockets();
 
 var userRepository = new UserRepository();
 
-app.MapRegister(userRepository); // "/register" ¿£µåÆ÷ÀÎÆ®¸¦ µî·ÏÇÕ´Ï´Ù.
+app.MapRegister(userRepository); // "/register" ì—”ë“œí¬ì¸íŠ¸ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
 
 var tokenService = new TokenService();
 
-app.MapLogin(tokenService, userRepository); // "/login" ¿£µåÆ÷ÀÎÆ®¸¦ µî·ÏÇÕ´Ï´Ù.
+app.MapLogin(tokenService, userRepository); // "/login" ì—”ë“œí¬ì¸íŠ¸ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
 
 var clientRegistry = new ClientRegistry();
 var inventoryService = new InventoryRepository();
@@ -36,32 +35,40 @@ app.Map("/chat", async context =>
     if (context.WebSockets.IsWebSocketRequest)
     {
         string? token = context.Request.Query["token"].FirstOrDefault();
+        string format = context.Request.Query["format"].FirstOrDefault() ?? "json";
 
-        // 1. ÅäÅ« À¯È¿¼º °Ë»ç
-        if (token is null || !tokenService.Validate(token, out string? userId))
+        if (format != "json" && format != "protobuf")
         {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("½ÂÀÎµÇÁö ¾ÊÀº Á¢±Ù");
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsync("ì§€ì›í•˜ì§€ ì•ŠëŠ” í¬ë§·ìž…ë‹ˆë‹¤.");
             return;
         }
 
-        // 2. »ç¿ëÀÚ Á¤º¸ Á¶È¸
+        // 1. í† í° ìœ íš¨ì„± ê²€ì‚¬
+        if (token is null || !tokenService.Validate(token, out string? userId))
+        {
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("ìŠ¹ì¸ë˜ì§€ ì•Šì€ ì ‘ê·¼");
+            return;
+        }
+
+        // 2. ì‚¬ìš©ìž ì •ë³´ ì¡°íšŒ
         string? nickname = userRepository.GetNickname(userId!);
 
         if (nickname is null)
         {
             context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("½ÂÀÎµÇÁö ¾ÊÀº Á¢±Ù");
+            await context.Response.WriteAsync("ìŠ¹ì¸ë˜ì§€ ì•Šì€ ì ‘ê·¼");
             return;
         }
 
-        // 3. WeobSocket ¿¬°á
+        // 3. WeobSocket ì—°ê²°
         var client = await context.WebSockets.AcceptWebSocketAsync();
 
-        // 4. ÅäÅ« ¸¸·á Ã³¸®
+        // 4. í† í° ë§Œë£Œ ì²˜ë¦¬
         tokenService.Revoke(token);
 
-        await chatService.AddClientAsync(client, userId!, nickname);
+        await chatService.AddClientAsync(client, userId!, nickname, format);
 
         var buffer = new byte[1024 * 4];
 
@@ -71,15 +78,12 @@ app.Map("/chat", async context =>
 
             if (receivedResult.MessageType == WebSocketMessageType.Close)
             {
-                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "¿¬°á ÇØÁ¦", CancellationToken.None);
+                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "ì—°ê²° í•´ì œ", CancellationToken.None);
                 await chatService.RemoveClientAsync(userId!);
                 break;
             }
 
-            var json = Encoding.UTF8.GetString(buffer, 0, receivedResult.Count);
-            Console.WriteLine($"¹ÞÀº ¸Þ½ÃÁö: {json}");
-
-            await chatService.HandleMessageAsync(userId!, json);
+            await chatService.HandleMessageAsync(userId!, buffer[..receivedResult.Count]);
         }
     }
     else

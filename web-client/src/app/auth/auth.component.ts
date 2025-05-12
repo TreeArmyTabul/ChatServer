@@ -15,8 +15,9 @@ export class AuthComponent {
 
   authData: { [key in Lowercase<keyof AuthPayload>]: string } = {
     id: '',
-    password: ''
+    password: '',
   };
+  dataFormat: 'json' | 'protobuf' = 'json';
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -24,7 +25,7 @@ export class AuthComponent {
     if (this.isLoginMode()) {
       this.authService.login({ Id: this.authData.id, Password: this.authData.password }).subscribe({
         next: (response) => {
-          this.router.navigate(['/chat'], { queryParams: { token: response.token }});
+          this.router.navigate(['/chat'], { queryParams: { format: this.dataFormat, token: response.token, }});
         },
         error: () => {
           this.authData = { id: '', password: '' };

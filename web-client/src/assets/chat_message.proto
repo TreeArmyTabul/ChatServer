@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package ChatServer;
+
+enum ChatMessageType {
+  GIFT = 0;
+  JOIN = 1;
+  LEAVE = 2;
+  MESSAGE = 3;
+  SYSTEM = 4;
+  USER_LIST = 5;
+  WELCOME = 6;
+}
+
+message ChatMessage {
+  ChatMessageType type = 1;  // 메시지 타입
+  string nickname = 2;       // 사용자 표시 이름
+  string text = 3;          // 메시지 본문
+}

@@ -1,5 +1,4 @@
-﻿using System.Net.WebSockets;
-using ChatServer.Models;
+﻿using ChatServer.Proto;
 using ChatServer.Services;
 using ChatServer.Utils;
 
@@ -9,12 +8,12 @@ namespace ChatServer.Commands
     {
         private readonly InventoryRepository _inventory;
         private readonly ClientRegistry _registry;
-        private readonly Func<WebSocket, ChatMessage, Task> _sendMessage;
+        private readonly Func<string, ChatMessage, Task> _sendMessage;
         private readonly UserRepository _userRepo;
 
         public string Name => "/gift";
 
-        public GiftCommand(InventoryRepository inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage, UserRepository userRepo)
+        public GiftCommand(InventoryRepository inventory, ClientRegistry registry, Func<string, ChatMessage, Task> sendMessage, UserRepository userRepo)
         {
             _inventory = inventory;
             _registry = registry;
@@ -24,10 +23,9 @@ namespace ChatServer.Commands
 
         public async Task ExecuteAsync(string userId)
         {
-            WebSocket? socket = _registry.GetSocketByUserId(userId);
             string? senderNickname = _userRepo.GetNickname(userId);
 
-            if (socket == null || senderNickname == null)
+            if (senderNickname == null)
             {
                 return;
             }
@@ -42,7 +40,7 @@ namespace ChatServer.Commands
 
                 _inventory.AddItem(recipient.Key, gift);
 
-                await _sendMessage(recipient.Value, new ChatMessage
+                await _sendMessage(recipient.Key, new ChatMessage
                 {
                     Nickname = string.Empty,
                     Type = ChatMessageType.Gift,
@@ -51,7 +49,7 @@ namespace ChatServer.Commands
                 return;
             }
 
-            await _sendMessage(socket, new ChatMessage
+            await _sendMessage(userId, new ChatMessage
             {
                 Nickname = string.Empty,
                 Type = ChatMessageType.System,

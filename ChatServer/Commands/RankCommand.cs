@@ -1,22 +1,19 @@
-﻿using ChatServer.Models;
+﻿using ChatServer.Proto;
 using ChatServer.Services;
-using System.Net.WebSockets;
 
 namespace ChatServer.Commands
 {
     public class RankCommand : IChatCommand
     {
         private readonly InventoryRepository _inventory;
-        private readonly ClientRegistry _registry;
-        private readonly Func<WebSocket, ChatMessage, Task> _sendMessage;
+        private readonly Func<string, ChatMessage, Task> _sendMessage;
         private readonly UserRepository _userRepo;
 
         public string Name => "/rank";
 
-        public RankCommand(InventoryRepository inventory, ClientRegistry registry, Func<WebSocket, ChatMessage, Task> sendMessage, UserRepository userRepo)
+        public RankCommand(InventoryRepository inventory, Func<string, ChatMessage, Task> sendMessage, UserRepository userRepo)
         {
             _inventory = inventory;
-            _registry = registry;
             _sendMessage = sendMessage;
             _userRepo = userRepo;
         }
@@ -32,14 +29,7 @@ namespace ChatServer.Commands
                     return $"{index + 1}위. {nickname} - {kv.Value}점";
                 });
 
-            WebSocket? socket = _registry.GetSocketByUserId(userId);
-
-            if (socket == null)
-            {
-                return;
-            }
-
-            await _sendMessage(socket, new ChatMessage
+            await _sendMessage(userId, new ChatMessage
             {
                 Nickname = string.Empty,
                 Type = ChatMessageType.System,

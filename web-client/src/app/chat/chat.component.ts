@@ -17,16 +17,17 @@ export class ChatComponent implements OnInit {
   constructor(private activatedRoute: ActivatedRoute, public chatService: ChatService) {}
 
   ngOnInit(): void {
-    const token = this.activatedRoute.snapshot.queryParams["token"]
-
-    this.chatService.connect(token);
+    const format = this.activatedRoute.snapshot.queryParams["format"];
+    const token = this.activatedRoute.snapshot.queryParams["token"];
+    
+    this.chatService.connect(token, format);
   }
 
   sendMessage(): void {
     const message = this.inputMessage.trim();
 
     if (message) {
-      this.chatService.send(message);
+      this.chatService.sendMessage(message);
       this.inputMessage = '';
     }
   }
